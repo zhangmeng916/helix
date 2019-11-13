@@ -20,8 +20,8 @@ package org.apache.helix.model;
  */
 
 import java.util.List;
-
 import org.apache.helix.util.StringTemplate;
+
 
 /**
  * config-scope that replaces @link ConfigScope
@@ -36,7 +36,8 @@ public class HelixConfigScope {
     RESOURCE(2, 0),
     PARTITION(2, 1),
     CONSTRAINT(2, 0),
-    REST(2, 0);
+    REST(2, 0),
+    CLOUD(2, 0);
 
     final int _zkPathArgNum;
     final int _mapKeyArgNum;

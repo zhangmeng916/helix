@@ -20,9 +20,9 @@ package org.apache.helix.model.builder;
  */
 
 import java.util.Arrays;
-
 import org.apache.helix.model.HelixConfigScope;
 import org.apache.helix.model.HelixConfigScope.ConfigScopeProperty;
+
 
 /**
  * config-scope builder that replaces @link ConfigScopeBuilder
@@ -34,6 +34,7 @@ public class HelixConfigScopeBuilder {
   private String _participantName;
   private String _resourceName;
   private String _partitionName;
+  private String _cloudName;
 
   public HelixConfigScopeBuilder(ConfigScopeProperty type, String... keys) {
     int argNum = type.getZkPathArgNum() + type.getMapKeyArgNum();
@@ -66,7 +67,13 @@ public class HelixConfigScopeBuilder {
         _partitionName = keys[2];
       }
       break;
-    default:
+      case CLOUD:
+        _resourceName = keys[1];
+        if (keys.length > 2) {
+          _cloudName = keys[2];
+        }
+        break;
+      default:
       break;
     }
   }
@@ -92,6 +99,11 @@ public class HelixConfigScopeBuilder {
 
   public HelixConfigScopeBuilder forPartition(String partitionName) {
     _partitionName = partitionName;
+    return this;
+  }
+
+  public HelixConfigScopeBuilder forCloud(String cloudName) {
+    _cloudName = cloudName;
     return this;
   }
 
