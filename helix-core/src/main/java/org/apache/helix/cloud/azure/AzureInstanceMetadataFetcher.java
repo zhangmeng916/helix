@@ -1,4 +1,4 @@
-package org.apache.helix.cloud;
+package org.apache.helix.cloud.azure;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -21,13 +21,17 @@ package org.apache.helix.cloud;
 
 import org.apache.helix.common.cloud.CloudInformationFetcher;
 
-public class AzureInformationFetcher implements CloudInformationFetcher {
+public class AzureInstanceMetadataFetcher implements CloudInformationFetcher {
   private final String _azureUrl;
 
-  public AzureInformationFetcher(String azureUrl) {
-    _azureUrl = azureUrl;
+  public AzureInstanceMetadataFetcher(String azureInstanceMetadataEndpoint) {
+    _azureUrl = azureInstanceMetadataEndpoint;
   }
 
+  /**
+   * Get the instance metadata information from Azure using the azure instance metadata endpoint
+   * @return instance metadata information
+   */
   @Override
   public String getCloudInformation() {
     // TODO:send a http request to AMIS (_azureUrl) to get the instance information. The response is a Json string

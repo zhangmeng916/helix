@@ -20,12 +20,20 @@ package org.apache.helix.common.cloud;
  */
 
 /**
- * An interface that parses and validates cloud topology information
- * @param <T> The type of record to use
+ * Generic interface to parse and validate cloud information
  */
-public interface CloudInformationParser<T> {
+public interface CloudInformationParser {
 
+  /**
+   * Validate the response from cloud environment against the schema
+   * @return whether the response is valid or not
+   */
   boolean validate();
 
+  /**
+   * Get the value of a specific field from cloud response
+   * @param key the key of the field
+   * @return the value of the required field
+   */
   String getValue(String key);
 }

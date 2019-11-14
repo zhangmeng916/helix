@@ -1,4 +1,4 @@
-package org.apache.helix.cloud;
+package org.apache.helix.cloud.azure;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,6 +19,6 @@ package org.apache.helix.cloud;
  * under the License.
  */
 
-public class AzureComputeInfo {
-  //TODO: populate with all Azure compute fields
+public class AzureInstanceComputeInfo {
+  //TODO: populate with all Azure instance compute fields
 }

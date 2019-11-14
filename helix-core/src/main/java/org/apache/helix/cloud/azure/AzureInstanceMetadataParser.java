@@ -1,4 +1,4 @@
-package org.apache.helix.cloud;
+package org.apache.helix.cloud.azure;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -29,43 +29,52 @@ import java.lang.reflect.Type;
 import org.apache.helix.common.cloud.CloudInformationParser;
 
 
-public class AzureInformationParser implements CloudInformationParser {
+public class AzureInstanceMetadataParser implements CloudInformationParser {
 
   private static Object _response;
-  private static AzureComputeInfo  _azureComputeInfo;
+  private static AzureInstanceComputeInfo _azureInstanceComputeInfo;
 
-  public AzureInformationParser(Object response) {
+  public AzureInstanceMetadataParser(Object response) {
       _response = response;
   }
 
+  /**
+   * Validate the response from Azure against the schema defined in AIMS https://docs.microsoft.com/en-us/azure/virtual-machines/windows/instance-metadata-service
+   * @return whether the response is a valid one from Azure
+   */
   @Override
   public boolean validate() {
     try {
       Gson gson =
           new GsonBuilder()
-              .registerTypeAdapter(AzureComputeInfo.class, new AzureComputeInfoDeserializer())
+              .registerTypeAdapter(AzureInstanceComputeInfo.class, new AzureComputeInfoDeserializer())
               .create();
-      _azureComputeInfo = gson.fromJson(_response.toString(), AzureComputeInfo.class);
+      _azureInstanceComputeInfo = gson.fromJson(_response.toString(), AzureInstanceComputeInfo.class);
     } catch (Exception e) {
       return false;
     }
     return true;
   }
 
+  /**
+   * Get a specific field value from Azure response by specifying the key
+   * @param key the key of the field
+   * @return the value of the required field
+   */
   @Override
   public String getValue(String key) {
     //TODO: get the value from _azureComputeInfo with a given key
     return null;
   }
 
-  class AzureComputeInfoDeserializer implements JsonDeserializer<AzureComputeInfo>
+  class AzureComputeInfoDeserializer implements JsonDeserializer<AzureInstanceComputeInfo>
   {
     @Override
-    public  AzureComputeInfo deserialize(JsonElement je, Type type, JsonDeserializationContext jdc)
+    public  AzureInstanceComputeInfo deserialize(JsonElement je, Type type, JsonDeserializationContext jdc)
         throws JsonParseException
     {
       JsonElement computeInfo = je.getAsJsonObject().get("compute");
-      return new Gson().fromJson(computeInfo, AzureComputeInfo.class);
+      return new Gson().fromJson(computeInfo, AzureInstanceComputeInfo.class);
 
     }
   }

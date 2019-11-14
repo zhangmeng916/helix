@@ -20,13 +20,13 @@ package org.apache.helix.common.cloud;
  */
 
 /**
- * An interface that provides cloud information fetching
+ * Generic interface to fetch cloud information
  * @param <T> The type of record to use
  */
 public interface CloudInformationFetcher<T> {
   /**
-   * Get the cloud environment information with a given url
-   * @return cloud environment information
+   * Get the information from the cloud where the instance resides
+   * @return cloud information that a particular cloud can provide
    */
   T getCloudInformation();
 }
