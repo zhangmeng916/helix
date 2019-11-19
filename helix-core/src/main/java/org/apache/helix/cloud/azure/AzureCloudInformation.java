@@ -1,4 +1,4 @@
-package org.apache.helix.common.cloud;
+package org.apache.helix.cloud.azure;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,20 +19,20 @@ package org.apache.helix.common.cloud;
  * under the License.
  */
 
-/**
- * Generic interface to parse and validate cloud information
- */
-public interface CloudInformationParser {
-  /**
-   * Validate the response from cloud environment against the defined fields
-   * @return whether the response is valid or not
-   */
-  boolean validate(CloudInformation cloudInformation);
+import org.apache.helix.common.cloud.CloudInformation;
 
-  /**
-   * Get the value of a specific field from cloud response
-   * @param key the key of the field
-   * @return the value of the required field
-   */
-  String getValue(String key);
+
+public class AzureCloudInformation implements CloudInformation {
+
+  public AzureCloudInformation() {
+
+  }
+
+  public String get(String key) {
+    return null;
+  }
+
+  public void set(String key, String value) {
+
+  }
 }

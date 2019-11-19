@@ -20,19 +20,21 @@ package org.apache.helix.common.cloud;
  */
 
 /**
- * Generic interface to parse and validate cloud information
+ * Generic interface to store cloud information
  */
-public interface CloudInformationParser {
-  /**
-   * Validate the response from cloud environment against the defined fields
-   * @return whether the response is valid or not
-   */
-  boolean validate(CloudInformation cloudInformation);
+public interface CloudInformation {
 
-  /**
-   * Get the value of a specific field from cloud response
-   * @param key the key of the field
-   * @return the value of the required field
-   */
-  String getValue(String key);
+   /**
+    * get a specific field by the key
+    * @param key the key of the field
+    */
+
+   String get(String key);
+
+   /**
+    * set a field to a given value
+    * @param key the key of the field
+    * @param value the value of the field
+    */
+   void set(String key, String value);
 }
