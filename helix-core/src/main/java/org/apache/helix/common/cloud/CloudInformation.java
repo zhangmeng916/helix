@@ -23,18 +23,4 @@ package org.apache.helix.common.cloud;
  * Generic interface to store cloud information
  */
 public interface CloudInformation {
-
-   /**
-    * get a specific field by the key
-    * @param key the key of the field
-    */
-
-   String get(String key);
-
-   /**
-    * set a field to a given value
-    * @param key the key of the field
-    * @param value the value of the field
-    */
-   void set(String key, String value);
 }

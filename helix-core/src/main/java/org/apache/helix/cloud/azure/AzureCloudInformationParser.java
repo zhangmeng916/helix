@@ -19,53 +19,21 @@ package org.apache.helix.cloud.azure;
  * under the License.
  */
 
-import java.util.ArrayList;
 import java.util.List;
-import org.apache.helix.common.cloud.CloudInformation;
 import org.apache.helix.common.cloud.CloudInformationParser;
-import org.codehaus.jackson.JsonNode;
 
 
 public class AzureCloudInformationParser implements CloudInformationParser {
 
-  private static List<String> _responses;
-
-  public AzureCloudInformationParser(List<String> responses) {
-    _responses = responses;
+  public AzureCloudInformationParser() {
   }
 
-
   /**
-   * Validate the response against the fields defined in Azure cloud information
+   * Parse Azure cloud information. It includes validating the response and populating the corresponding fields.
    * @return whether the response is valid
    */
   @Override
-  public boolean validate(CloudInformation azureCloudInformation) {
-    List<JsonNode> jsonNodes = new ArrayList<>();
-    _responses.stream().forEach(response ->  jsonNodes.add(convert(response)));
-    for(JsonNode _jsonResponse: jsonNodes) {
-      // TODO: validate against Azure cloud information to make sure all required fields are present
-    }
-    return true;
-  }
-
-  /**
-   * Get a specific field value from Azure response by specifying the key
-   * @param key the key of the field
-   * @return the value of the required field
-   */
-  @Override
-  public String getValue(String key) {
-    //TODO: get the value from Azure cloud information with a given key
-    return null;
-  }
-
-  /**
-   * Convert the string response to a JsonNode for further validation
-   * @return a json object
-   */
-  public JsonNode convert(String jsonString) {
-    //TODO: convert the string into a json node
+  public AzureCloudInformation parseCloudInformation(List<String> cloudResponses) {
     return null;
   }
 }

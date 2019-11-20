@@ -25,7 +25,6 @@ import org.apache.helix.common.cloud.SourceType;
 
 public class AzureCloudInformationFetcher implements CloudInformationFetcher {
 
-
   public AzureCloudInformationFetcher() {
   }
 
@@ -35,31 +34,7 @@ public class AzureCloudInformationFetcher implements CloudInformationFetcher {
    */
   @Override
   public String get(SourceType type) {
-    AzureSourceType azureSourceType = (AzureSourceType) type;
-    switch (azureSourceType) {
-      case URL:
-        return getAzureCloudInformationFromUrl();
-      case FILE_PATH:
-        return getAzureCloudInformationFromFilePath();
-      case ZOOKEEPER_PATH:
-        return getAzureCloudInformationFromZookeeperPath();
-        default:
-          return null;
-    }
-  }
-
-  private String getAzureCloudInformationFromUrl() {
-    //TODO: implement logic to retrieve information based on Url
-    return null;
-  }
-
-  private String getAzureCloudInformationFromFilePath() {
-    //TODO: implement logic to retrieve information based on file path
-    return null;
-  }
-
-  private String getAzureCloudInformationFromZookeeperPath() {
-    //TODO: implement logic to retrieve information based on zookeeper path
+    //TODO: implement logic to retrieve information based on source type
     return null;
   }
 }

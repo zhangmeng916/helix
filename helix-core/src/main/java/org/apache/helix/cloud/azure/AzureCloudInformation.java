@@ -27,12 +27,4 @@ public class AzureCloudInformation implements CloudInformation {
   public AzureCloudInformation() {
 
   }
-
-  public String get(String key) {
-    return null;
-  }
-
-  public void set(String key, String value) {
-
-  }
 }

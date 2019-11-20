@@ -19,20 +19,16 @@ package org.apache.helix.common.cloud;
  * under the License.
  */
 
+import java.util.List;
+
+
 /**
  * Generic interface to parse and validate cloud information
  */
 public interface CloudInformationParser {
   /**
-   * Validate the response from cloud environment against the defined fields
-   * @return whether the response is valid or not
+   * Parse the cloud information from responses
+   * @return the parsed cloud information
    */
-  boolean validate(CloudInformation cloudInformation);
-
-  /**
-   * Get the value of a specific field from cloud response
-   * @param key the key of the field
-   * @return the value of the required field
-   */
-  String getValue(String key);
+  CloudInformation parseCloudInformation(List<String> cloudResponses);
 }
