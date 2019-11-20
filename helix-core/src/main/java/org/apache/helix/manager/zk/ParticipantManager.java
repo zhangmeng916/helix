@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
 import org.I0Itec.zkclient.DataUpdater;
 import org.I0Itec.zkclient.exception.ZkNodeExistsException;
 import org.apache.helix.AccessOption;
@@ -53,7 +54,6 @@ import org.apache.helix.participant.statemachine.ScheduledTaskStateModelFactory;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 /**
  * Class to handle all session related work for a participant.
@@ -97,12 +97,11 @@ public class ParticipantManager {
   }
 
   /**
-   * Handle new session for a participant.
+   * Handle new session for a participang.
    * @throws Exception
    */
   public void handleNewSession() throws Exception {
-
-    autoRegistration();
+    joinCluster();
 
     /**
      * Invoke PreConnectCallbacks
@@ -122,56 +121,39 @@ public class ParticipantManager {
     setupMsgHandler();
   }
 
-  private void autoRegistration() {
-
-    boolean autoRegistration = false;
+  private void joinCluster() {
+    // Read cluster config and see if instance can auto join the cluster
     boolean autoJoin = false;
-
     try {
-      // Read cloud config and see if instance can auto register to the cluster
       HelixConfigScope scope =
-          new HelixConfigScopeBuilder(ConfigScopeProperty.CLOUD).forCloud(_manager.getClusterName()).build();
-      autoRegistration = Boolean.parseBoolean(_configAccessor.get(scope, ZKHelixManager.IS_CLOUD_ENV));
-      LOG.info("instance: " + _instanceName + " auto-register " + _clusterName + " is " + autoRegistration);
+          new HelixConfigScopeBuilder(ConfigScopeProperty.CLUSTER).forCluster(
+              _manager.getClusterName()).build();
+      autoJoin =
+          Boolean.parseBoolean(_configAccessor.get(scope,
+              ZKHelixManager.ALLOW_PARTICIPANT_AUTO_JOIN));
+      LOG.info("instance: " + _instanceName + " auto-joining " + _clusterName + " is " + autoJoin);
     } catch (Exception e) {
-      // autoRegistration is false
-    }
-
-    if (!autoRegistration) {
-      // Read cluster config and see if instance can auto join the cluster
-      try {
-        HelixConfigScope scope =
-            new HelixConfigScopeBuilder(ConfigScopeProperty.CLUSTER).forCluster(_manager.getClusterName()).build();
-        autoJoin = Boolean.parseBoolean(_configAccessor.get(scope, ZKHelixManager.ALLOW_PARTICIPANT_AUTO_JOIN));
-        LOG.info("instance: " + _instanceName + " auto-joining " + _clusterName + " is " + autoJoin);
-      } catch (Exception e) {
-        // autoJoin is false
-      }
+      // autoJoin is false
     }
 
     if (!ZKUtil.isInstanceSetup(_zkclient, _clusterName, _instanceName, _instanceType)) {
-      if (!autoRegistration) {
-        if (!autoJoin) {
-          throw new HelixException(
-              "Initial cluster structure is not set up for instance: " + _instanceName + ", instanceType: "
-                  + _instanceType);
-        } else {
-          LOG.info(_instanceName + " is auto-joining cluster: " + _clusterName);
-          InstanceConfig instanceConfig = new InstanceConfig(_instanceName);
-          String hostName = _instanceName;
-          String port = "";
-          int lastPos = _instanceName.lastIndexOf("_");
-          if (lastPos > 0) {
-            hostName = _instanceName.substring(0, lastPos);
-            port = _instanceName.substring(lastPos + 1);
-          }
-          instanceConfig.setHostName(hostName);
-          instanceConfig.setPort(port);
-          instanceConfig.setInstanceEnabled(true);
-          _helixAdmin.addInstance(_clusterName, instanceConfig);
-        }
+      if (!autoJoin) {
+        throw new HelixException("Initial cluster structure is not set up for instance: "
+            + _instanceName + ", instanceType: " + _instanceType);
       } else {
-          // TODO: perform the auto registration work
+        LOG.info(_instanceName + " is auto-joining cluster: " + _clusterName);
+        InstanceConfig instanceConfig = new InstanceConfig(_instanceName);
+        String hostName = _instanceName;
+        String port = "";
+        int lastPos = _instanceName.lastIndexOf("_");
+        if (lastPos > 0) {
+          hostName = _instanceName.substring(0, lastPos);
+          port = _instanceName.substring(lastPos + 1);
+        }
+        instanceConfig.setHostName(hostName);
+        instanceConfig.setPort(port);
+        instanceConfig.setInstanceEnabled(true);
+        _helixAdmin.addInstance(_clusterName, instanceConfig);
       }
     }
   }
