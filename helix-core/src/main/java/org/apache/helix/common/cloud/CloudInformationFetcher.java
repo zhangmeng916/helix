@@ -21,9 +21,8 @@ package org.apache.helix.common.cloud;
 
 /**
  * Generic interface to fetch cloud information
- * @param <T> The type of source type to use
  */
-public interface CloudInformationFetcher<T extends Object> {
+public interface CloudInformationFetcher <T extends Object> {
   /**
    * Get the cloud information based on the source type
    * @return cloud information

@@ -23,7 +23,7 @@ import java.util.List;
 import org.apache.helix.common.cloud.CloudInformationParser;
 
 
-public class AzureCloudInformationParser implements CloudInformationParser {
+public class AzureCloudInformationParser implements CloudInformationParser <String> {
 
   public AzureCloudInformationParser() {
   }

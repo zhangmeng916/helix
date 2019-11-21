@@ -22,15 +22,14 @@ package org.apache.helix.cloud.azure;
 import org.apache.helix.common.cloud.CloudInformationFetcher;
 import org.apache.helix.common.cloud.SourceType;
 
-
-public class AzureCloudInformationFetcher implements CloudInformationFetcher {
+public class AzureCloudInformationFetcher implements CloudInformationFetcher <String> {
 
   public AzureCloudInformationFetcher() {
   }
 
   /**
-   * Get the instance metadata information from Azure using the azure instance metadata endpoint
-   * @return instance metadata information
+   * Get the Azure cloud information based on source type
+   * @return Azure cloud information as a string
    */
   @Override
   public String get(SourceType type) {
