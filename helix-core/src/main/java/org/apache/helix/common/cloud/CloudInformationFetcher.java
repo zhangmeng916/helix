@@ -19,6 +19,9 @@ package org.apache.helix.common.cloud;
  * under the License.
  */
 
+import java.util.List;
+
+
 /**
  * Generic interface to fetch cloud information
  */
@@ -27,5 +30,5 @@ public interface CloudInformationFetcher <T extends Object> {
    * Get the cloud information based on the source type
    * @return cloud information
    */
-  T get(SourceType sourceType);
+  List<T> get();
 }

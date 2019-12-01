@@ -24,10 +24,10 @@ import java.util.List;
 /**
  * Generic interface to parse and validate cloud information
  */
-public interface CloudInformationParser <T extends Object> {
+public interface CloudInformationParser {
   /**
    * Parse the cloud information from responses
    * @return the parsed cloud information
    */
-  CloudInformation parseCloudInformation(List<T> cloudResponses);
+  CloudInformation parseCloudInformation();
 }

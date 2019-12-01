@@ -19,6 +19,15 @@ package org.apache.helix.cloud.azure;
  * under the License.
  */
 
+import java.util.concurrent.TimeUnit;
+
+
 public class AzureCloudConstants {
-  //TODO: define all Azure cloud constants
+  public static final int RETRY_MAX = 5;
+  public static final int CONNECTION_TIMEOUT_MS = Math.toIntExact(TimeUnit.SECONDS.toMillis(50)); // 50s connection timeout
+  public static final int REQUEST_TIMEOUT_MS = Math.toIntExact(TimeUnit.SECONDS.toMillis(50));    // 50s request timeout
+
+  public static final String FIELD_COMPUTE = "compute";
+  public static final String FILED_PLATFORM_FAULT_DOMAIN = "platformFaultDomain";
+  public static final String FILED_VMSS_NAME = "vmScaleSetName";
 }

@@ -24,7 +24,53 @@ import org.apache.helix.common.cloud.CloudInformation;
 
 public class AzureCloudInformation implements CloudInformation {
 
-  public AzureCloudInformation() {
+  private String _platformFaultDomain;
+  private String _platformUpdateDomain;
+  private String _vmName;
+  private String _vmId;
+  private String _vmssName;
 
+  public AzureCloudInformation() {
+  }
+
+    public String getPlatformFaultDomain() {
+      return _platformFaultDomain;
+    }
+
+    public String getPlatformUpdateDomain() {
+      return _platformUpdateDomain;
+    }
+
+  public String getVmName() {
+    return _vmName;
+  }
+
+  public String getVmId() {
+    return _vmId;
+  }
+
+  public String getVmssName() {
+    return _vmssName;
+  }
+
+    public void setPlatformFaultDomain(String platformFaultDomain) {
+    _platformFaultDomain = platformFaultDomain;
+    }
+
+    public void setPlatformUpdateDomain(String platformUpdateDomain) {
+    _platformUpdateDomain = platformUpdateDomain;
+    }
+
+
+  public void setVmName(String vmName) {
+    _vmName = vmName;
+  }
+
+  public void setVmId(String vmId) {
+    _vmId = vmId;
+  }
+
+  public void setVmssName(String vmssName) {
+    _vmssName = vmssName ;
   }
 }
