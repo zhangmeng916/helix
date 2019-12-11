@@ -21,6 +21,7 @@ package org.apache.helix.model;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.helix.HelixException;
 import org.apache.helix.HelixProperty;
 import org.apache.helix.ZNRecord;
@@ -39,7 +40,6 @@ public class CloudConfig extends HelixProperty {
     CLOUD_ENABLED, // determine whether the cluster is inside cloud environment.
     CLOUD_PROVIDER, // the environment the cluster is in, e.g. Azure, AWS, or Customized
     CLOUD_ID, // the cloud Id that belongs to this cluster.
-
     // If user uses Helix supported default provider, the below entries will not be shown in
     // CloudConfig.
     CLOUD_INFO_SOURCE, // the source for retrieving the cloud information.

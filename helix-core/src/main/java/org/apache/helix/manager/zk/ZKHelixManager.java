@@ -19,24 +19,30 @@ package org.apache.helix.manager.zk;
  * under the License.
  */
 
+import com.google.common.collect.Sets;
+
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 import javax.management.JMException;
 
-import com.google.common.collect.Sets;
 import org.I0Itec.zkclient.IZkStateListener;
 import org.I0Itec.zkclient.exception.ZkInterruptedException;
 import org.apache.helix.BaseDataAccessor;
 import org.apache.helix.ClusterMessagingService;
 import org.apache.helix.ConfigAccessor;
 import org.apache.helix.HelixAdmin;
+import org.apache.helix.HelixCloudProperties;
+import org.apache.helix.HelixCloudPropertiesFactory;
 import org.apache.helix.HelixConstants.ChangeType;
 import org.apache.helix.HelixDataAccessor;
 import org.apache.helix.HelixException;
@@ -73,6 +79,7 @@ import org.apache.helix.manager.zk.client.HelixZkClient;
 import org.apache.helix.manager.zk.client.SharedZkClientFactory;
 import org.apache.helix.messaging.DefaultMessagingService;
 import org.apache.helix.model.BuiltInStateModelDefinitions;
+import org.apache.helix.model.CloudConfig;
 import org.apache.helix.model.HelixConfigScope.ConfigScopeProperty;
 import org.apache.helix.model.LiveInstance;
 import org.apache.helix.monitoring.ZKPathDataDumpTask;
@@ -106,6 +113,7 @@ public class ZKHelixManager implements HelixManager, IZkStateListener {
   private final List<PreConnectCallback> _preConnectCallbacks;
   protected final List<CallbackHandler> _handlers;
   private final HelixManagerProperties _properties;
+  private final Properties _inputCloudProperties;
   private final HelixManagerStateListener _stateListener;
 
   /**
@@ -197,11 +205,16 @@ public class ZKHelixManager implements HelixManager, IZkStateListener {
 
   public ZKHelixManager(String clusterName, String instanceName, InstanceType instanceType,
       String zkAddress) {
-    this(clusterName, instanceName, instanceType, zkAddress, null);
+    this(clusterName, instanceName, instanceType, zkAddress, null, null);
   }
 
   public ZKHelixManager(String clusterName, String instanceName, InstanceType instanceType,
       String zkAddress, HelixManagerStateListener stateListener) {
+    this(clusterName, instanceName, instanceType, zkAddress, stateListener, null);
+  }
+
+  public ZKHelixManager(String clusterName, String instanceName, InstanceType instanceType,
+      String zkAddress, HelixManagerStateListener stateListener, Properties properties) {
 
     LOG.info(
         "Create a zk-based cluster manager. zkSvr: " + zkAddress + ", clusterName: " + clusterName + ", instanceName: " + instanceName + ", type: " + instanceType);
@@ -228,6 +241,7 @@ public class ZKHelixManager implements HelixManager, IZkStateListener {
     _handlers = new ArrayList<>();
     _properties = new HelixManagerProperties(SystemPropertyKeys.CLUSTER_MANAGER_VERSION);
     _version = _properties.getVersion();
+    _inputCloudProperties = properties;
 
     _keyBuilder = new Builder(clusterName);
     _messagingService = new DefaultMessagingService(this);
@@ -1163,6 +1177,7 @@ public class ZKHelixManager implements HelixManager, IZkStateListener {
   }
 
   void handleNewSessionAsParticipant() throws Exception {
+    buildHelixCloudProperties(_inputCloudProperties, _configAccessor.getCloudConfig(_clusterName));
     if (_participantManager != null) {
       _participantManager.reset();
     }
@@ -1170,6 +1185,11 @@ public class ZKHelixManager implements HelixManager, IZkStateListener {
         new ParticipantManager(this, _zkclient, _sessionTimeout, _liveInstanceInfoProvider,
             _preConnectCallbacks);
     _participantManager.handleNewSession();
+  }
+
+  void buildHelixCloudProperties(Properties properties, CloudConfig cloudConfig) {
+    HelixCloudPropertiesFactory.getInstance()
+        .buildHelixCloudProperties(new HelixCloudProperties(properties, cloudConfig));
   }
 
   void handleNewSessionAsController() {

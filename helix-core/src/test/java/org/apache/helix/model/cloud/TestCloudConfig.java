@@ -20,6 +20,7 @@ package org.apache.helix.model.cloud;
  */
 
 import java.util.ArrayList;
+
 import org.apache.helix.ConfigAccessor;
 import org.apache.helix.HelixException;
 import org.apache.helix.PropertyKey.Builder;
@@ -29,6 +30,7 @@ import org.apache.helix.manager.zk.ZKHelixDataAccessor;
 import org.apache.helix.manager.zk.ZkBaseDataAccessor;
 import org.apache.helix.model.CloudConfig;
 import org.apache.helix.cloud.constants.CloudProvider;
+
 import java.util.List;
 import org.testng.Assert;
 import org.testng.annotations.Test;

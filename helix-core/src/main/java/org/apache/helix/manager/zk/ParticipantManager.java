@@ -21,8 +21,10 @@ package org.apache.helix.manager.zk;
 
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import org.I0Itec.zkclient.DataUpdater;
@@ -31,6 +33,7 @@ import org.apache.helix.AccessOption;
 import org.apache.helix.BaseDataAccessor;
 import org.apache.helix.ConfigAccessor;
 import org.apache.helix.HelixAdmin;
+import org.apache.helix.HelixCloudPropertiesFactory;
 import org.apache.helix.HelixException;
 import org.apache.helix.HelixManager;
 import org.apache.helix.InstanceType;
@@ -39,8 +42,11 @@ import org.apache.helix.PreConnectCallback;
 import org.apache.helix.PropertyKey;
 import org.apache.helix.ZNRecord;
 import org.apache.helix.ZNRecordBucketizer;
+import org.apache.helix.api.cloud.CloudInstanceInformation;
+import org.apache.helix.api.cloud.CloudInstanceInformationProcessor;
 import org.apache.helix.manager.zk.client.HelixZkClient;
 import org.apache.helix.messaging.DefaultMessagingService;
+import org.apache.helix.model.CloudConfig;
 import org.apache.helix.model.CurrentState;
 import org.apache.helix.model.HelixConfigScope;
 import org.apache.helix.model.HelixConfigScope.ConfigScopeProperty;
@@ -51,6 +57,7 @@ import org.apache.helix.model.StateModelDefinition;
 import org.apache.helix.model.builder.HelixConfigScopeBuilder;
 import org.apache.helix.participant.StateMachineEngine;
 import org.apache.helix.participant.statemachine.ScheduledTaskStateModelFactory;
+import org.apache.helix.util.HelixUtil;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,9 +83,16 @@ public class ParticipantManager {
   final StateMachineEngine _stateMachineEngine;
   final LiveInstanceInfoProvider _liveInstanceInfoProvider;
   final List<PreConnectCallback> _preConnectCallbacks;
+  final Properties _properties;
 
   public ParticipantManager(HelixManager manager, HelixZkClient zkclient, int sessionTimeout,
       LiveInstanceInfoProvider liveInstanceInfoProvider, List<PreConnectCallback> preConnectCallbacks) {
+    this(manager, zkclient, sessionTimeout, liveInstanceInfoProvider, preConnectCallbacks, null);
+  }
+
+
+  public ParticipantManager(HelixManager manager, HelixZkClient zkclient, int sessionTimeout,
+      LiveInstanceInfoProvider liveInstanceInfoProvider, List<PreConnectCallback> preConnectCallbacks, Properties properties) {
     _zkclient = zkclient;
     _manager = manager;
     _clusterName = manager.getClusterName();
@@ -94,10 +108,11 @@ public class ParticipantManager {
     _stateMachineEngine = manager.getStateMachineEngine();
     _liveInstanceInfoProvider = liveInstanceInfoProvider;
     _preConnectCallbacks = preConnectCallbacks;
+    _properties = properties;
   }
 
   /**
-   * Handle new session for a participang.
+   * Handle new session for a participant.
    * @throws Exception
    */
   public void handleNewSession() throws Exception {
@@ -122,40 +137,108 @@ public class ParticipantManager {
   }
 
   private void joinCluster() {
-    // Read cluster config and see if instance can auto join the cluster
+    boolean autoRegistration = false;
     boolean autoJoin = false;
+
     try {
-      HelixConfigScope scope =
-          new HelixConfigScopeBuilder(ConfigScopeProperty.CLUSTER).forCluster(
-              _manager.getClusterName()).build();
-      autoJoin =
-          Boolean.parseBoolean(_configAccessor.get(scope,
-              ZKHelixManager.ALLOW_PARTICIPANT_AUTO_JOIN));
-      LOG.info("instance: " + _instanceName + " auto-joining " + _clusterName + " is " + autoJoin);
+      // Read cloud config and see if instance can auto register to the cluster
+      autoRegistration = Boolean.valueOf(
+          HelixCloudPropertiesFactory.getInstance().getHelixCloudProperties()
+              .getProperty(CloudConfig.CloudConfigProperty.CLOUD_ENABLED.name()));
+      LOG.info("instance: " + _instanceName + " auto-register " + _clusterName + " is "
+          + autoRegistration);
     } catch (Exception e) {
-      // autoJoin is false
+      // autoRegistration is false
+    }
+
+    // If auto registration is false, check whether instance can auto join the cluster
+    // Difference between auto registration and auto join is mainly whether the participant can
+    // populate the domain information in instance config
+    if (!autoRegistration) {
+      try {
+        HelixConfigScope scope = new HelixConfigScopeBuilder(ConfigScopeProperty.CLUSTER)
+            .forCluster(_manager.getClusterName()).build();
+        autoJoin = Boolean
+            .parseBoolean(_configAccessor.get(scope, ZKHelixManager.ALLOW_PARTICIPANT_AUTO_JOIN));
+        LOG.info(
+            "instance: " + _instanceName + " auto-joining " + _clusterName + " is " + autoJoin);
+        addInstanceConfig(null);
+      } catch (Exception e) {
+        // autoJoin is false
+      }
     }
 
     if (!ZKUtil.isInstanceSetup(_zkclient, _clusterName, _instanceName, _instanceType)) {
-      if (!autoJoin) {
-        throw new HelixException("Initial cluster structure is not set up for instance: "
-            + _instanceName + ", instanceType: " + _instanceType);
-      } else {
-        LOG.info(_instanceName + " is auto-joining cluster: " + _clusterName);
-        InstanceConfig instanceConfig = new InstanceConfig(_instanceName);
-        String hostName = _instanceName;
-        String port = "";
-        int lastPos = _instanceName.lastIndexOf("_");
-        if (lastPos > 0) {
-          hostName = _instanceName.substring(0, lastPos);
-          port = _instanceName.substring(lastPos + 1);
+      if (!autoRegistration) {
+        if (!autoJoin) {
+          throw new HelixException(
+              "Initial cluster structure is not set up for instance: " + _instanceName
+                  + ", instanceType: " + _instanceType);
+        } else {
+          LOG.info(_instanceName + " is auto-joining cluster: " + _clusterName);
+          addInstanceConfig(null);
         }
-        instanceConfig.setHostName(hostName);
-        instanceConfig.setPort(port);
-        instanceConfig.setInstanceEnabled(true);
-        _helixAdmin.addInstance(_clusterName, instanceConfig);
+      } else {
+        String cloudInstanceInformationProcessorName =
+            HelixCloudPropertiesFactory.getInstance().getHelixCloudProperties()
+                .getProperty(CloudConfig.CloudConfigProperty.CLOUD_INFO_PROCESSOR_NAME.name());
+        try {
+          // fetch cloud instance information for the participant
+          CloudInstanceInformationProcessor processor = CloudInstanceInformationProcessor.class
+              .cast(HelixUtil.loadClass(getClass(), cloudInstanceInformationProcessorName)
+                  .newInstance());
+          List<String> responses = processor.fetchCloudInstanceInformation();
+
+          // parse cloud instance information for the participant
+          CloudInstanceInformation cloudInstanceInformation =
+              processor.parseCloudInstanceInformation(responses);
+          String domain = cloudInstanceInformation
+              .get(CloudInstanceInformation.CloudInstanceField.FAULT_DOMAIN.name());
+          String cloudIdInRemote = cloudInstanceInformation
+              .get(CloudInstanceInformation.CloudInstanceField.INSTANCE_SET_NAME.name());
+          String cloudIdInConfig = _configAccessor.getCloudConfig(_clusterName).getCloudID();
+
+          if (!cloudIdInRemote.equals(cloudIdInConfig)) {
+            LOG.error("cloudId in config: {} is not consistent with cloudId from remote: {}",
+                cloudIdInConfig, cloudIdInRemote);
+            throw new IllegalArgumentException("cloudId in config: " + cloudIdInConfig
+                + " is not consistent with cloudId from remote: " + cloudIdInRemote);
+          }
+
+          addInstanceConfig(domain);
+        } catch (ClassNotFoundException ex) {
+          throw new HelixException(
+              "Exception while invoking custom cloud instance information processor class: "
+                  + cloudInstanceInformationProcessorName, ex);
+        } catch (InstantiationException ex) {
+          throw new HelixException(
+              "Exception while invoking custom cloud instance information processor class: "
+                  + cloudInstanceInformationProcessorName, ex);
+        } catch (IllegalAccessException ex) {
+          throw new HelixException(
+              "Exception while invoking custom cloud instance information processor class: "
+                  + cloudInstanceInformationProcessorName, ex);
+        }
       }
     }
+  }
+
+  private void addInstanceConfig(String domainInfo) {
+    InstanceConfig instanceConfig = new InstanceConfig(_instanceName);
+    String hostName = _instanceName;
+    String port = "";
+    int lastPos = _instanceName.lastIndexOf("_");
+    if (lastPos > 0) {
+      hostName = _instanceName.substring(0, lastPos);
+      port = _instanceName.substring(lastPos + 1);
+    }
+    instanceConfig.setHostName(hostName);
+    instanceConfig.setPort(port);
+    instanceConfig.setInstanceEnabled(true);
+    if (!domainInfo.isEmpty()) {
+      instanceConfig.setDomain(domainInfo);
+    }
+    _helixAdmin.addInstance(_clusterName, instanceConfig);
   }
 
   private void createLiveInstance() {
