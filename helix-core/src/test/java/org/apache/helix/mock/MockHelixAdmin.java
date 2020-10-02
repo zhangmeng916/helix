@@ -369,7 +369,7 @@ public class MockHelixAdmin implements HelixAdmin {
   }
 
   @Override public CustomizedView getResourceCustomizedView(String clusterName,
-      String resourceName) {
+      String resourceName, String customizedStateType) {
     return null;
   }
 
