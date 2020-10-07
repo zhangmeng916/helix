@@ -501,8 +501,6 @@ public class ResourceAccessor extends AbstractHelixResource {
     return notFound();
   }
 
-  @ResponseMetered(name = HttpConstants.READ_REQUEST)
-  @Timed(name = HttpConstants.READ_REQUEST)
   @GET
   @Path("{resourceName}/{customizedStateType}/customizedView")
   public Response getResourceCustomizedView(@PathParam("clusterId") String clusterId,
