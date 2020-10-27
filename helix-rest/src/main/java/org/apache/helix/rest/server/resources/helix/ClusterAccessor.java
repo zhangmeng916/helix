@@ -282,6 +282,16 @@ public class ClusterAccessor extends AbstractHelixResource {
           return badRequest(e.getMessage());
         }
         break;
+      case purgeOfflineParticipants:
+        Map<String, Long> customizedPurgeMap = null;
+        try {
+          customizedPurgeMap =
+              OBJECT_MAPPER.readValue(content, new TypeReference<HashMap<String, Long>>() {
+              });
+        } catch (Exception e) {
+          // NOP
+        }
+        helixAdmin.purgeOfflineInstances(clusterId, customizedPurgeMap);
       default:
         return badRequest("Unsupported command {}." + command);
     }

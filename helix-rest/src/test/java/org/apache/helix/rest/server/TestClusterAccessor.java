@@ -518,6 +518,29 @@ public class TestClusterAccessor extends AbstractTestClass {
   }
 
   @Test(dependsOnMethods = "testEnableDisableMaintenanceModeWithCustomFields")
+  public void testPurgeOfflineParticipants() {
+    System.out.println("Start test :" + TestHelper.getTestMethodName());
+    String cluster = _clusters.iterator().next();
+    HelixDataAccessor accessor = new ZKHelixDataAccessor(cluster, _baseAccessor);
+
+    String instance = cluster + "localhost_12920";
+    HelixDataAccessor helixDataAccessor = new ZKHelixDataAccessor(cluster, _baseAccessor);
+    InstanceConfig instanceConfig =
+        helixDataAccessor.getProperty(helixDataAccessor.keyBuilder().instanceConfig(instance));
+    instanceConfig.setDomain("helixZoneId=123");
+    helixDataAccessor.setProperty(helixDataAccessor.keyBuilder().instanceConfig(instance),
+        instanceConfig);
+
+    String content = "{\"purge.timout\":\"0\"}";
+    post("clusters/" + cluster, ImmutableMap.of("command", "purgeOfflineParticipants"),
+        Entity.entity(content, MediaType.APPLICATION_JSON_TYPE),
+        Response.Status.OK.getStatusCode());
+    Assert.assertFalse(
+        accessor.getBaseDataAccessor().exists(accessor.keyBuilder().instanceConfig(instance).getPath(), 0));
+    System.out.println("End test :" + TestHelper.getTestMethodName());
+  }
+
+  @Test(dependsOnMethods = "testEnableDisableMaintenanceModeWithCustomFields")
   public void testGetStateModelDef() throws IOException {
 
     System.out.println("Start test :" + TestHelper.getTestMethodName());

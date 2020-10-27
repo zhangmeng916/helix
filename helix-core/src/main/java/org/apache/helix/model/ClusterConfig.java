@@ -960,8 +960,7 @@ public class ClusterConfig extends HelixProperty {
    */
   public long getOfflineNodeTimeOutForPurge() {
     return _record
-        .getLongField(ClusterConfigProperty.OFFLINE_NODE_TIME_OUT_FOR_PURGE.name(),
-            VALUE_NOT_SET);
+        .getLongField(ClusterConfigProperty.OFFLINE_NODE_TIME_OUT_FOR_PURGE.name(), VALUE_NOT_SET);
   }
 
   /**
